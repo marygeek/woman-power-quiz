@@ -12,10 +12,9 @@
             --primary-text: #544c43;
             --title-green: #5e743e;
             --title-pink: #c4646b;
-            /* --- MODIFIED COLORS --- */
             --button-bg: #c0676d;
             --button-text: #ffffff;
-            --button-hover-bg: #a8565b; /* Darker shade for hover */
+            --button-hover-bg: #a8565b; 
         }
 
         body {
@@ -109,7 +108,7 @@
             border-radius: 20px;
             padding: 5px 15px;
             cursor: pointer;
-            visibility: hidden; /* Hide by default */
+            visibility: hidden;
         }
         
         #back-button:hover {
@@ -164,7 +163,6 @@
             line-height: 1.7;
         }
         
-        /* --- NEW STYLES for form --- */
         .form-group {
             width: 100%;
             margin-bottom: 20px;
@@ -185,7 +183,7 @@
             text-align: center;
         }
         #age-select {
-            text-align: left; /* for dropdown */
+            text-align: left;
         }
 
 
@@ -215,7 +213,6 @@
             gap: 15px;
         }
 
-        /* --- MODIFIED STYLES for share buttons --- */
         .share-btn {
             background-color: transparent;
             border: none;
@@ -230,7 +227,6 @@
             width: 48px;
             height: 48px;
         }
-        /* --- END MODIFIED STYLES --- */
 
         #loading-page {
             font-size: 1.2em;
@@ -314,6 +310,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONFIGURATION ---
             const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqid2o7etbAXLFbgyd0dAXS_UbgVXsfHwuutZBPN3ijNShEcm8gHWdV4gd_hmZykZv/exec';
+            // --- IMPORTANT: If your Vercel URL is different, please update it here ---
+            const BASE_URL = 'https://woman-power-quiz.vercel.app'; 
 
             const quizData = [
                 {
@@ -325,7 +323,6 @@
                     options: ["是", "否"]
                 },
                 {
-                    // --- MODIFIED Question 3 Options ---
                     question: "展區三：如果人生可以重來，我希望回到哪個階段？",
                     options: ["剛出生", "青春期", "成熟期", "中高齡期", "不想重來"]
                 },
@@ -343,8 +340,10 @@
                 "card/05.png"
             ];
             
-            const shareURL = 'https://ntwsc.tw/';
-            const shareText = '我的專屬女力卡！快來新北市婦女服務中心，參觀女性生命週期常設展「我沒有腳本，但我有方向」！';
+            // --- MODIFIED Share Text ---
+            const baseShareText = '我的專屬女力卡！快來新北市婦女服務中心，參觀女性生命週期常設展「我沒有腳本，但我有方向」！';
+            const websiteURL = 'https://ntwsc.tw/';
+            const finalShareText = `${baseShareText}\n展覽資訊請上官網：${websiteURL}`;
 
             // --- DOM ELEMENTS ---
             const pages = {
@@ -362,18 +361,19 @@
             const optionsContainer = document.getElementById('options-container');
             const emailForm = document.getElementById('email-form');
             const emailInput = document.getElementById('email-input');
-            const ageSelect = document.getElementById('age-select'); // --- NEW Age Select Element
+            const ageSelect = document.getElementById('age-select');
             const resultCard = document.getElementById('result-card');
             const downloadLink = document.getElementById('download-link');
             const downloadPrompt = document.getElementById('download-prompt');
             const shareFacebook = document.getElementById('share-facebook');
             const shareLine = document.getElementById('share-line');
             const shareThreads = document.getElementById('share-threads');
-            const shareInstagram = document.getElementById('share-instagram'); // --- NEW Instagram Button Element
+            const shareInstagram = document.getElementById('share-instagram');
 
             // --- STATE ---
             let currentQuestionIndex = 0;
             let userAnswers = [];
+            let selectedCardRelativePath = ''; // To store the path of the chosen card
 
             // --- FUNCTIONS ---
             function showPage(pageName) {
@@ -415,7 +415,6 @@
                 }
             }
             
-            // --- MODIFIED Email Submit Function ---
             async function handleEmailSubmit(e) {
                 e.preventDefault();
                 const email = emailInput.value;
@@ -429,7 +428,7 @@
 
                 const formData = new FormData();
                 formData.append('email', email);
-                formData.append('age', age); // Append age data
+                formData.append('age', age);
                 formData.append('timestamp', new Date().toISOString());
 
                 try {
@@ -451,10 +450,10 @@
 
             function showResult() {
                 const randomIndex = Math.floor(Math.random() * cardImages.length);
-                const selectedCard = cardImages[randomIndex];
-                resultCard.src = selectedCard;
-                downloadLink.href = selectedCard;
-                downloadPrompt.href = selectedCard;
+                selectedCardRelativePath = cardImages[randomIndex]; // Store the path
+                resultCard.src = selectedCardRelativePath;
+                downloadLink.href = selectedCardRelativePath;
+                downloadPrompt.href = selectedCardRelativePath;
                 showPage('result');
             }
 
@@ -467,22 +466,30 @@
             backBtn.addEventListener('click', handleBackClick);
             emailForm.addEventListener('submit', handleEmailSubmit);
             
+            // --- MODIFIED Share Logic ---
             shareFacebook.addEventListener('click', () => {
-                const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareURL)}&quote=${encodeURIComponent(shareText)}`;
+                // For Facebook, sharing the image URL directly works best.
+                const imageUrl = `${BASE_URL}/${selectedCardRelativePath}`;
+                const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}&quote=${encodeURIComponent(finalShareText)}`;
                 window.open(url, '_blank');
             });
             
             shareLine.addEventListener('click', () => {
-                const url = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + '\n' + shareURL)}`;
+                // For LINE, we send the text and the image URL in the text body.
+                const imageUrl = `${BASE_URL}/${selectedCardRelativePath}`;
+                const text = `${finalShareText}\n圖片連結：${imageUrl}`;
+                const url = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
                 window.open(url, '_blank');
             });
 
             shareThreads.addEventListener('click', () => {
-                const url = `https://www.threads.net/intent/post?text=${encodeURIComponent(shareText + '\n' + shareURL)}`;
+                // For Threads, we include the image URL in the text body.
+                const imageUrl = `${BASE_URL}/${selectedCardRelativePath}`;
+                const text = `${finalShareText}\n${imageUrl}`;
+                const url = `https://www.threads.net/intent/post?text=${encodeURIComponent(text)}`;
                 window.open(url, '_blank');
             });
 
-            // --- NEW Instagram Button Listener ---
             shareInstagram.addEventListener('click', () => {
                 alert('請先下載圖片，再到 Instagram App 中分享至限時動態！');
             });
