@@ -80,8 +80,8 @@
             color: var(--title-green);
             font-size: 0;
 			background: url(img/img-title.png) no-repeat center center / cover;
-    width: 110%;
-    height: 90px;
+            width: 110%;
+            height: 90px;
         }
         
         #welcome-page h1 span {
@@ -179,19 +179,20 @@
             margin-bottom: 8px;
             font-size: 0.9em;
         }
-        #email-input, #age-select {
+        #area-input, #age-select { /* --- MODIFIED: email-input changed to area-input --- */
             width: 100%;
             padding: 15px;
             border: 1px solid #ccc;
             border-radius: 10px;
             font-size: 1em;
             box-sizing: border-box;
+        }
+        #area-input {
             text-align: center;
         }
         #age-select {
             text-align: left;
         }
-
 
         #result-card {
             max-width: 100%;
@@ -263,6 +264,10 @@
             <p>請填寫您的基本資料，我們將立即為您揭曉專屬的女力牌卡。</p>
             <form id="email-form" style="width:100%;">
                 <div class="form-group">
+                    <label for="area-input">您的居住區域</label>
+                    <input type="text" id="area-input" placeholder="例如：台北市文山區，新北市板橋區..." required>
+                </div>
+                <div class="form-group">
                     <label for="age-select">您的年齡</label>
                     <select id="age-select" required>
                         <option value="" disabled selected>請選擇您的年齡區間</option>
@@ -274,10 +279,6 @@
                         <option value="56-65歲">56-65歲</option>
                         <option value="65歲以上">65歲以上</option>
                     </select>
-                </div>
-                <div class="form-group">
-                     <label for="email-input">您的 Email</label>
-                    <input type="email" id="email-input" placeholder="請輸入您的 Email" required>
                 </div>
                 <button type="submit" class="action-btn">領取我的女力卡</button>
             </form>
@@ -302,7 +303,7 @@
                         <img src="https://img.icons8.com/color/48/line-me.png" alt="line-me"/>
                     </button>
                     <button class="share-btn" id="share-threads">
-                         <img src="https://img.icons8.com/ios-filled/50/threads.png" alt="threads"/>
+                        <img src="https://img.icons8.com/ios-filled/50/threads.png" alt="threads"/>
                     </button>
                     <button class="share-btn" id="share-instagram">
                         <img src="https://img.icons8.com/fluency/48/instagram-new.png" alt="instagram-new"/>
@@ -316,7 +317,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONFIGURATION ---
             const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxqid2o7etbAXLFbgyd0dAXS_UbgVXsfHwuutZBPN3ijNShEcm8gHWdV4gd_hmZykZv/exec';
-            // --- IMPORTANT: If your Vercel URL is different, please update it here ---
             const BASE_URL = 'https://woman-power-quiz.vercel.app'; 
 
             const quizData = [
@@ -334,19 +334,14 @@
                 },
                 {
                     question: "展區四：面對熟齡生活的改變，我的態度是？",
-                    options: ["欣然接受", "順其自然", "恐懼緊張", "做好準備"]
+                    options: ["欣然接受", "順其自然", "恐懼緊張", "做好準備", "還沒想好"]
                 }
             ];
 
             const cardImages = [
-                "card/01.png",
-                "card/02.png",
-                "card/03.png",
-                "card/04.png",
-                "card/05.png"
+                "card/01.png", "card/02.png", "card/03.png", "card/04.png", "card/05.png"
             ];
             
-            // --- MODIFIED Share Text ---
             const baseShareText = '我的專屬女力卡！快來新北市婦女服務中心，參觀女性生命週期常設展「我沒有腳本，但我有方向」！';
             const websiteURL = 'https://ntwsc.tw/';
             const finalShareText = `${baseShareText}\n展覽資訊請上官網：${websiteURL}`;
@@ -366,7 +361,8 @@
             const questionText = document.getElementById('question-text');
             const optionsContainer = document.getElementById('options-container');
             const emailForm = document.getElementById('email-form');
-            const emailInput = document.getElementById('email-input');
+            // --- MODIFIED: Get new area input element ---
+            const areaInput = document.getElementById('area-input'); 
             const ageSelect = document.getElementById('age-select');
             const resultCard = document.getElementById('result-card');
             const downloadLink = document.getElementById('download-link');
@@ -379,7 +375,7 @@
             // --- STATE ---
             let currentQuestionIndex = 0;
             let userAnswers = [];
-            let selectedCardRelativePath = ''; // To store the path of the chosen card
+            let selectedCardRelativePath = '';
 
             // --- FUNCTIONS ---
             function showPage(pageName) {
@@ -421,11 +417,12 @@
                 }
             }
             
+            // --- MODIFIED: handleEmailSubmit function updated ---
             async function handleEmailSubmit(e) {
                 e.preventDefault();
-                const email = emailInput.value;
+                const area = areaInput.value; // Get area value
                 const age = ageSelect.value;
-                if (!email || !age) {
+                if (!area || !age) {
                     alert('請填寫所有欄位！');
                     return;
                 }
@@ -433,7 +430,7 @@
                 showPage('loading');
 
                 const formData = new FormData();
-                formData.append('email', email);
+                formData.append('area', area); // Append area data
                 formData.append('age', age);
                 formData.append('timestamp', new Date().toISOString());
 
@@ -456,7 +453,7 @@
 
             function showResult() {
                 const randomIndex = Math.floor(Math.random() * cardImages.length);
-                selectedCardRelativePath = cardImages[randomIndex]; // Store the path
+                selectedCardRelativePath = cardImages[randomIndex];
                 resultCard.src = selectedCardRelativePath;
                 downloadLink.href = selectedCardRelativePath;
                 downloadPrompt.href = selectedCardRelativePath;
@@ -472,16 +469,13 @@
             backBtn.addEventListener('click', handleBackClick);
             emailForm.addEventListener('submit', handleEmailSubmit);
             
-            // --- MODIFIED Share Logic ---
             shareFacebook.addEventListener('click', () => {
-                // For Facebook, sharing the image URL directly works best.
                 const imageUrl = `${BASE_URL}/${selectedCardRelativePath}`;
                 const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}&quote=${encodeURIComponent(finalShareText)}`;
                 window.open(url, '_blank');
             });
             
             shareLine.addEventListener('click', () => {
-                // For LINE, we send the text and the image URL in the text body.
                 const imageUrl = `${BASE_URL}/${selectedCardRelativePath}`;
                 const text = `${finalShareText}\n圖片連結：${imageUrl}`;
                 const url = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
@@ -489,7 +483,6 @@
             });
 
             shareThreads.addEventListener('click', () => {
-                // For Threads, we include the image URL in the text body.
                 const imageUrl = `${BASE_URL}/${selectedCardRelativePath}`;
                 const text = `${finalShareText}\n${imageUrl}`;
                 const url = `https://www.threads.net/intent/post?text=${encodeURIComponent(text)}`;
